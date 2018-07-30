@@ -1,6 +1,6 @@
 # MongoDB store for [Session](https://github.com/go-session/session)
 
-[![ReportCard][reportcard-image]][reportcard-url] [![GoDoc][godoc-image]][godoc-url] [![License][license-image]][license-url]
+[![Build][Build-Status-Image]][Build-Status-Url] [![Codecov][codecov-image]][codecov-url][![ReportCard][reportcard-image]][reportcard-url] [![GoDoc][godoc-image]][godoc-url] [![License][license-image]][license-url]
 
 ## Quick Start
 
@@ -82,6 +82,10 @@ $ ./server
 
     Copyright (c) 2018 Lyric
 
+[Build-Status-Url]: https://travis-ci.org/go-session/mongo
+[Build-Status-Image]: https://travis-ci.org/go-session/mongo.svg?branch=master
+[codecov-url]: https://codecov.io/gh/go-session/mongo
+[codecov-image]: https://codecov.io/gh/go-session/mongo/branch/master/graph/badge.svg
 [reportcard-url]: https://goreportcard.com/report/github.com/go-session/mongo
 [reportcard-image]: https://goreportcard.com/badge/github.com/go-session/mongo
 [godoc-url]: https://godoc.org/github.com/go-session/mongo
