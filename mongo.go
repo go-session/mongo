@@ -2,20 +2,20 @@ package mongo
 
 import (
 	"context"
+	"encoding/json"
 	"sync"
 	"time"
 
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 	"github.com/go-session/session"
-	"github.com/json-iterator/go"
 )
 
 var (
 	_             session.ManagerStore = &managerStore{}
 	_             session.Store        = &store{}
-	jsonMarshal                        = jsoniter.Marshal
-	jsonUnmarshal                      = jsoniter.Unmarshal
+	jsonMarshal                        = json.Marshal
+	jsonUnmarshal                      = json.Unmarshal
 )
 
 // NewStore Create an instance of a mongo store
@@ -45,16 +45,10 @@ func newManagerStore(session *mgo.Session, dbName, cName string) *managerStore {
 		session: session,
 		dbName:  dbName,
 		cName:   cName,
-		pool: sync.Pool{
-			New: func() interface{} {
-				return newStore(session, dbName, cName)
-			},
-		},
 	}
 }
 
 type managerStore struct {
-	pool    sync.Pool
 	session *mgo.Session
 	dbName  string
 	cName   string
@@ -98,20 +92,15 @@ func (s *managerStore) Check(_ context.Context, sid string) (bool, error) {
 }
 
 func (s *managerStore) Create(ctx context.Context, sid string, expired int64) (session.Store, error) {
-	store := s.pool.Get().(*store)
-	store.reset(ctx, sid, expired, nil)
-	return store, nil
+	return newStore(ctx, s, sid, expired, nil), nil
 }
 
 func (s *managerStore) Update(ctx context.Context, sid string, expired int64) (session.Store, error) {
-	store := s.pool.Get().(*store)
-
 	value, err := s.getValue(sid)
 	if err != nil {
 		return nil, err
 	} else if value == "" {
-		store.reset(ctx, sid, expired, nil)
-		return store, nil
+		return newStore(ctx, s, sid, expired, nil), nil
 	}
 
 	session := s.session.Clone()
@@ -130,8 +119,7 @@ func (s *managerStore) Update(ctx context.Context, sid string, expired int64) (s
 		return nil, err
 	}
 
-	store.reset(ctx, sid, expired, values)
-	return store, nil
+	return newStore(ctx, s, sid, expired, values), nil
 }
 
 func (s *managerStore) Delete(_ context.Context, sid string) error {
@@ -141,14 +129,11 @@ func (s *managerStore) Delete(_ context.Context, sid string) error {
 }
 
 func (s *managerStore) Refresh(ctx context.Context, oldsid, sid string, expired int64) (session.Store, error) {
-	store := s.pool.Get().(*store)
-
 	value, err := s.getValue(oldsid)
 	if err != nil {
 		return nil, err
 	} else if value == "" {
-		store.reset(ctx, sid, expired, nil)
-		return store, nil
+		return newStore(ctx, s, sid, expired, nil), nil
 	}
 
 	session := s.session.Clone()
@@ -172,8 +157,7 @@ func (s *managerStore) Refresh(ctx context.Context, oldsid, sid string, expired 
 		return nil, err
 	}
 
-	store.reset(ctx, sid, expired, values)
-	return store, nil
+	return newStore(ctx, s, sid, expired, values), nil
 }
 
 func (s *managerStore) Close() error {
@@ -181,11 +165,15 @@ func (s *managerStore) Close() error {
 	return nil
 }
 
-func newStore(session *mgo.Session, dbName, cName string) *store {
+func newStore(ctx context.Context, s *managerStore, sid string, expired int64, values map[string]interface{}) *store {
 	return &store{
-		session: session,
-		dbName:  dbName,
-		cName:   cName,
+		session: s.session,
+		dbName:  s.dbName,
+		cName:   s.cName,
+		ctx:     ctx,
+		sid:     sid,
+		expired: expired,
+		values:  values,
 	}
 }
 
@@ -198,16 +186,6 @@ type store struct {
 	sid     string
 	expired int64
 	values  map[string]interface{}
-}
-
-func (s *store) reset(ctx context.Context, sid string, expired int64, values map[string]interface{}) {
-	if values == nil {
-		values = make(map[string]interface{})
-	}
-	s.ctx = ctx
-	s.sid = sid
-	s.expired = expired
-	s.values = values
 }
 
 func (s *store) Context() context.Context {
