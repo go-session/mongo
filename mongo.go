@@ -166,6 +166,10 @@ func (s *managerStore) Close() error {
 }
 
 func newStore(ctx context.Context, s *managerStore, sid string, expired int64, values map[string]interface{}) *store {
+	if values == nil {
+		values = make(map[string]interface{})
+	}
+
 	return &store{
 		session: s.session,
 		dbName:  s.dbName,
