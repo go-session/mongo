@@ -2,20 +2,20 @@ package mongo
 
 import (
 	"context"
-	"encoding/json"
 	"sync"
 	"time"
 
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
-	"github.com/go-session/session"
+	session "github.com/go-session/session/v3"
+	jsoniter "github.com/json-iterator/go"
 )
 
 var (
 	_             session.ManagerStore = &managerStore{}
 	_             session.Store        = &store{}
-	jsonMarshal                        = json.Marshal
-	jsonUnmarshal                      = json.Unmarshal
+	jsonMarshal                        = jsoniter.Marshal
+	jsonUnmarshal                      = jsoniter.Unmarshal
 )
 
 // NewStore Create an instance of a mongo store

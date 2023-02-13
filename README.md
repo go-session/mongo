@@ -7,7 +7,7 @@
 ### Download and install
 
 ```bash
-$ go get -u -v github.com/go-session/mongo
+go get -u -v github.com/go-session/mongo/v3
 ```
 
 ### Create file `server.go`
@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/go-session/mongo"
-	"github.com/go-session/session"
+	"github.com/go-session/mongo/v3"
+	"github.com/go-session/session/v3"
 )
 
 func main() {
